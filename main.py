@@ -176,10 +176,10 @@ def authorize(client_id, secret):
 	return getAccessToken(ac, client_id, secret)
 
 #MAIN
-#firstAccountAccessToken = authorize(client_id='uKF4mcZYBZgzkA', secret='QiRkRXhN3hKo0SYh1f4Lxf99W7g')
+#firstAccountAccessToken = authorize(client_id='', secret='')
 
 #temp token expires around 9:30 
-#secondAccountAccessToken = '59XZ7THPD5RBGcEddarIkDa_9gY'#authorize(client_id='VcHyKiYKYkoEpg', secret='-evj89AF51Z7W0bpfRohtAEK8gk')
+#secondAccountAccessToken = ''#authorize(client_id='', secret='-')
 
 #clearSubscriptions(secondAccountAccessToken)
 #subList = getSubscriptions(firstAccountAccessToken);
