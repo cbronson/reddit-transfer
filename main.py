@@ -135,7 +135,7 @@ def getSubscriptions(accessToken):
 
 	subscriptionsString = ','.join(subNameList)
 
-	print subscriptionsString
+	return subscriptionsString
 
 
 def setSubscriptions(accessToken, subscriptions):
@@ -153,38 +153,46 @@ def setSubscriptions(accessToken, subscriptions):
 
 	print setSubscriptions.text
 
+def clearSubscriptions(accessToken):
+	s = getSubscriptions(accessToken)
+	print s
 
-def getSubscriptionsFromAccount():
-	#UserFound credentials
-	client_id = 'uKF4mcZYBZgzkA'
-	secret = 'QiRkRXhN3hKo0SYh1f4Lxf99W7g'
-	
-	print 'Enter Client ID: '
-	print 'Enter Secret: '
+	print 'Unsubscribing from all subscriptions'
+	subscribePayload = {
+		'action': 'unsub',
+		'sr': s 
+	}
 
+	subscriptionsHeaders = {
+		'user-agent': 'my-app/0.0.1',
+		'Authorization': 'Bearer '+accessToken
+	}
+
+	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
+	print setSubscriptions
+
+def authorize(client_id, secret):
 	ac = getAuthorizationCode(client_id)
-	at = getAccessToken(ac, client_id, secret)
-	s = getSubscriptions(at)
-	return s
-
-
-def setSubscriptionsToAccount(subList):
-	#sudoai credentials
-	client_id = '7gGnZuPubhE9nQ'
-	secret = 'CdAUTHipYr0c1cu9P9FR-aqXGCk'
-
-	print 'Enter Client ID: '
-	print 'Enter Secret: '
-
-	ac = getAuthorizationCode(client_id)
-	at = getAccessToken(ac, client_id, secret)
-
-	setSubscriptions(at, subList)
+	return getAccessToken(ac, client_id, secret)
 
 #MAIN
+#firstAccountAccessToken = authorize(client_id='uKF4mcZYBZgzkA', secret='QiRkRXhN3hKo0SYh1f4Lxf99W7g')
 
-subList = getSubscriptionsFromAccount();
-setSubscriptionsToAccount(subList);
+#temp token expires around 9:30 
+#secondAccountAccessToken = '59XZ7THPD5RBGcEddarIkDa_9gY'#authorize(client_id='VcHyKiYKYkoEpg', secret='-evj89AF51Z7W0bpfRohtAEK8gk')
+
+#clearSubscriptions(secondAccountAccessToken)
+#subList = getSubscriptions(firstAccountAccessToken);
+
+#SubscriptionsToAccount(accessToken=secondAccountAccessToken, subList=subList);
+
+
+#read accounts from accounts.json
+with open('accounts.json') as accountsFile:
+	data = json.load(accountsFile)
+
+print data["toAccount"]["secret"]
+
 
 #TODO: prompt user input
 #TODO: allow socket connection reuse
@@ -195,5 +203,7 @@ setSubscriptionsToAccount(subList);
 #TODO: Set proper user agent
 #TODO: **Remove initial subscriptions option 
 
+#Possible bug: it seems we may not be able to retreive subscriptions from a new account
+#			   until the user has subscribed to at least one other sub.
 
 #tempSubscriptionList = 't5_1rqwi,t5_2fwo,t5_2qh1m,t5_2qh26,t5_2qh38,t5_2qhhq,t5_2qhlh,t5_2qhue,t5_2qhva,t5_2qi03,t5_2qiib,t5_2qldo,t5_2qm8v,t5_2qn3q,t5_2qpco,t5_2qr0u,t5_2qr34,t5_2qs0q,t5_2qstm,t5_2r0z9,t5_2r65t,t5_2r7ih,t5_2rdbn,t5_2reni,t5_2rgbg'
