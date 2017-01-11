@@ -26,13 +26,23 @@ def startServer():
 	listenForData = True
 
 	while listenForData:
-		clientsocket,addr = s.accept()
+		c,addr = s.accept()
 		print('Received connection!')
 		print(str(addr))
-		data = clientsocket.recv(1024)
+		data = c.recv(1024)
 		if(data):
 			print 'Recevied data!'
-			clientsocket.close()
+			c.send('HTTP/1.0 200 OK\n')
+			c.send('Content-Type: text/html\n')
+			c.send('\n')
+			c.send("""
+				<html>
+				<body>
+				<h1>You may now close this window.</h1>
+				</body>
+				</html>
+			""") 
+			c.close()
 			listenForData = False
 			return data
 
@@ -42,6 +52,16 @@ def getCodeFromData(data):
 	parsed = parse_qs(urlparse(split2).query)
 	code = ''.join(parsed.get('code'))
 	return code
+
+
+def authorize(client_id, secret):
+	ac = getAuthorizationCode(client_id)
+	at = getAccessToken(ac, client_id, secret)
+
+	print 'Access Token: '
+	print at
+
+	return at
 
 
 def getAuthorizationCode(client_id):
@@ -68,16 +88,10 @@ def getAuthorizationCode(client_id):
 	if(data is False):
 		print 'Connection to server failed!'
 
-	else:
-		print 'You may now close your browser'
-
-
 	code = getCodeFromData(data)
 
 	print 'Code:'
 	print code
-
-	print 'We have the code, time to get the access token'
 
 	return code
 
@@ -95,8 +109,7 @@ def getAccessToken(code, client_id, secret):
 	}
 
 	postAccessToken = requests.post(postURL, data=accessPayload, headers=accessHeaders, auth=(client_id,secret))
-	print postAccessToken.text
-
+	
 
 	accessToken = postAccessToken.json().get('access_token')
 
@@ -111,27 +124,21 @@ def getSubscriptions(accessToken):
 		'Authorization': 'Bearer '+accessToken
 	}
 
-	getSubscriptions = requests.get('https://oauth.reddit.com/subreddits/mine/subscriber', headers=getSubscriptionsHeaders)
+	getSubscriptions = requests.get('https://oauth.reddit.com/subreddits/mine/subscriber?limit=100', headers=getSubscriptionsHeaders)
 
-	f = open('subs.json', 'w')
-	print >> f, getSubscriptions.text
-	f.close()
+	print getSubscriptions
 
-	print 'Subscriptions loaded...'
-
-	with open('subs.json') as subs_file:
-		subs_data = json.load(subs_file)
-
+	subs_data = json.loads(getSubscriptions.text)
 
 	subs_parent = subs_data['data']['children']
+
 
 	subNameList = [];
 
 	for s in subs_parent:
+		print s['data']['name']
 		subNameList.append(s['data']['name'])
 
-
-	print 'We now have a list of all subscribed subreddit names'
 
 	subscriptionsString = ','.join(subNameList)
 
@@ -153,9 +160,26 @@ def setSubscriptions(accessToken, subscriptions):
 
 	print setSubscriptions.text
 
+def setSingleSubscription(accessToken):
+	subscribePayload = {
+		'action': 'sub',
+		'sr': 't5_1rqwi' #temporary subreddit subscription
+	}
+
+	subscriptionsHeaders = {
+		'user-agent': 'my-app/0.0.1',
+		'Authorization': 'Bearer '+accessToken
+	}
+
+	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
+
+	print 'Set temporary subscription'
+	print setSubscriptions.text
+
 def clearSubscriptions(accessToken):
+	setSingleSubscription(accessToken)
 	s = getSubscriptions(accessToken)
-	print s
+	#print s
 
 	print 'Unsubscribing from all subscriptions'
 	subscribePayload = {
@@ -171,27 +195,54 @@ def clearSubscriptions(accessToken):
 	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
 	print setSubscriptions
 
-def authorize(client_id, secret):
-	ac = getAuthorizationCode(client_id)
-	return getAccessToken(ac, client_id, secret)
 
 #MAIN
-#firstAccountAccessToken = authorize(client_id='', secret='')
-
-#temp token expires around 9:30 
-#secondAccountAccessToken = ''#authorize(client_id='', secret='-')
-
-#clearSubscriptions(secondAccountAccessToken)
-#subList = getSubscriptions(firstAccountAccessToken);
-
-#SubscriptionsToAccount(accessToken=secondAccountAccessToken, subList=subList);
-
-
 #read accounts from accounts.json
 with open('accounts.json') as accountsFile:
 	data = json.load(accountsFile)
 
-print data["toAccount"]["secret"]
+
+
+#firstAccountAccessToken = 'hCCFA4BogFy-dPsUc_RkMov1gnY'
+#secondAccountAccessToken = authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
+
+
+#setSubscriptions(secondAccountAccessToken, subList)
+#print subList
+
+#clearSubscriptions(secondAccountAccessToken)
+
+
+#User input
+a = raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
+print '==== Authorizing First Account ====\n'
+b = raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
+
+firstAccountAccessToken = authorize(data["fromAccount"]["client_id"], data["fromAccount"]["secret"])
+#
+
+c = raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
+
+print '==== Authorizing Second Account ====\n'
+secondAccountAccessToken = 'JUiDrf9Caj0rh89p28t_jrhlPD4'#authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
+
+if(secondAccountAccessToken):
+	print 'Received second access token!\n'
+	d = raw_input('Accounts ready. Press Enter to begin transfer.\nCAUTION: This will overwrite any subscriptions on the second account')
+else:
+	print 'Error occured retreiving second account token!\n'
+
+
+subList = getSubscriptions(firstAccountAccessToken)
+clearSubscriptions(secondAccountAccessToken)
+setSubscriptions(secondAccountAccessToken, subList)
+
+print '==== Done ===='
+
+
+#SubscriptionsToAccount(accessToken=secondAccountAccessToken, subList=subList);
+
+
 
 
 #TODO: prompt user input
