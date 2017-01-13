@@ -12,6 +12,6 @@
 	<li>In the same browser, log out of the current account and log into the Reddit account which you want to import subscriptions to.</li>
 	<li>Press Enter</li>
 	<li>Be sure the click 'Accept' on the page that opens.</li>
-	<li>Press Enter. <b>Note: This will overwrite all subscriptions on the currently logged in account/</b></li>
+	<li>Press Enter. <b>Note: This will overwrite all subscriptions on the currently logged in account!</b></li>
 	<li>Done</li>
 </ol>
