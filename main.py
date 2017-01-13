@@ -8,12 +8,15 @@ from urlparse import urlparse, parse_qs
 import json
 
 
+#globals
+user_agent = 'my-app/0.0.1'
 
 
 def startServer():
 	host = ''
 	port = 3030
 	s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+	s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
 	try:
 		s.bind((host,port))
@@ -74,7 +77,7 @@ def getAuthorizationCode(client_id):
 	'scope': 'mysubreddits subscribe'
 	}
 
-	headers = {'user-agent': 'my-app/0.0.1'}
+	headers = {'user-agent': user_agent}
 
 
 	req = Request('GET', 'https://www.reddit.com/api/v1/authorize', params=payload, headers=headers)
@@ -105,7 +108,7 @@ def getAccessToken(code, client_id, secret):
 	}
 
 	accessHeaders = {
-		'user-agent': 'my-app/0.0.1',
+		'user-agent': user_agent,
 	}
 
 	postAccessToken = requests.post(postURL, data=accessPayload, headers=accessHeaders, auth=(client_id,secret))
@@ -120,7 +123,7 @@ def getAccessToken(code, client_id, secret):
 
 def getSubscriptions(accessToken):
 	getSubscriptionsHeaders = {
-		'user-agent': 'my-app/0.0.1',
+		'user-agent': user_agent,
 		'Authorization': 'Bearer '+accessToken
 	}
 
@@ -152,7 +155,7 @@ def setSubscriptions(accessToken, subscriptions):
 	}
 
 	subscriptionsHeaders = {
-		'user-agent': 'my-app/0.0.1',
+		'user-agent': user_agent,
 		'Authorization': 'Bearer '+accessToken
 	}
 
@@ -167,7 +170,7 @@ def setSingleSubscription(accessToken):
 	}
 
 	subscriptionsHeaders = {
-		'user-agent': 'my-app/0.0.1',
+		'user-agent': user_agent,
 		'Authorization': 'Bearer '+accessToken
 	}
 
@@ -177,6 +180,10 @@ def setSingleSubscription(accessToken):
 	print setSubscriptions.text
 
 def clearSubscriptions(accessToken):
+
+	#Possible bug: it seems we may not be able to retreive subscriptions from a new account
+	#until the user has subscribed to at least one other sub.
+
 	setSingleSubscription(accessToken)
 	s = getSubscriptions(accessToken)
 	#print s
@@ -188,73 +195,54 @@ def clearSubscriptions(accessToken):
 	}
 
 	subscriptionsHeaders = {
-		'user-agent': 'my-app/0.0.1',
+		'user-agent': user_agent,
 		'Authorization': 'Bearer '+accessToken
 	}
 
 	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
 	print setSubscriptions
 
-
+tg = "TESTING"
+def testFunc():
+	return tg
 #MAIN
 #read accounts from accounts.json
 with open('accounts.json') as accountsFile:
 	data = json.load(accountsFile)
 
+print testFunc()
 
 
-#firstAccountAccessToken = 'hCCFA4BogFy-dPsUc_RkMov1gnY'
-#secondAccountAccessToken = authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
+# #User input
+# a = raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
+# print '==== Authorizing First Account ====\n'
+# b = raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
+
+# firstAccountAccessToken = authorize(data["fromAccount"]["client_id"], data["fromAccount"]["secret"])
 
 
-#setSubscriptions(secondAccountAccessToken, subList)
-#print subList
+# c = raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
 
-#clearSubscriptions(secondAccountAccessToken)
+# print '==== Authorizing Second Account ====\n'
+# secondAccountAccessToken = authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
 
-
-#User input
-a = raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
-print '==== Authorizing First Account ====\n'
-b = raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
-
-firstAccountAccessToken = authorize(data["fromAccount"]["client_id"], data["fromAccount"]["secret"])
-#
-
-c = raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
-
-print '==== Authorizing Second Account ====\n'
-secondAccountAccessToken = 'JUiDrf9Caj0rh89p28t_jrhlPD4'#authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
-
-if(secondAccountAccessToken):
-	print 'Received second access token!\n'
-	d = raw_input('Accounts ready. Press Enter to begin transfer.\nCAUTION: This will overwrite any subscriptions on the second account')
-else:
-	print 'Error occured retreiving second account token!\n'
+# if(secondAccountAccessToken):
+# 	print 'Received second access token!\n'
+# 	d = raw_input('Accounts ready. Press Enter to begin transfer.\nCAUTION: This will overwrite any subscriptions on the second account')
+# else:
+# 	print 'Error occured retreiving second account token!\n'
 
 
-subList = getSubscriptions(firstAccountAccessToken)
-clearSubscriptions(secondAccountAccessToken)
-setSubscriptions(secondAccountAccessToken, subList)
+# subList = getSubscriptions(firstAccountAccessToken)
+# clearSubscriptions(secondAccountAccessToken)
+# setSubscriptions(secondAccountAccessToken, subList)
 
-print '==== Done ===='
-
-
-#SubscriptionsToAccount(accessToken=secondAccountAccessToken, subList=subList);
-
-
+# print '==== Done ===='
 
 
 #TODO: prompt user input
 #TODO: allow socket connection reuse
 #TODO: Error handling
-#TODO: Test again		
 #TODO: Verbose/debug mode
-#TODO: Write something to localhost before closing the connection
-#TODO: Set proper user agent
-#TODO: **Remove initial subscriptions option 
-
-#Possible bug: it seems we may not be able to retreive subscriptions from a new account
-#			   until the user has subscribed to at least one other sub.
-
-#tempSubscriptionList = 't5_1rqwi,t5_2fwo,t5_2qh1m,t5_2qh26,t5_2qh38,t5_2qhhq,t5_2qhlh,t5_2qhue,t5_2qhva,t5_2qi03,t5_2qiib,t5_2qldo,t5_2qm8v,t5_2qn3q,t5_2qpco,t5_2qr0u,t5_2qr34,t5_2qs0q,t5_2qstm,t5_2r0z9,t5_2r65t,t5_2r7ih,t5_2rdbn,t5_2reni,t5_2rgbg'
+#TODO: Set proper user agent 
+#TODO: What if the user accidently hits "decline" when authorizing app
