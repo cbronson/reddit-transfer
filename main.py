@@ -56,7 +56,6 @@ def getCodeFromData(data):
 	code = ''.join(parsed.get('code'))
 	return code
 
-
 def authorize(client_id, secret):
 	ac = getAuthorizationCode(client_id)
 	at = getAccessToken(ac, client_id, secret)
@@ -65,7 +64,6 @@ def authorize(client_id, secret):
 	print at
 
 	return at
-
 
 def getAuthorizationCode(client_id):
 	payload = {
@@ -79,11 +77,8 @@ def getAuthorizationCode(client_id):
 
 	headers = {'user-agent': user_agent}
 
-
 	req = Request('GET', 'https://www.reddit.com/api/v1/authorize', params=payload, headers=headers)
 	p = req.prepare()
-
-
 	webbrowser.open(p.url);
 
 	data = startServer();
@@ -118,9 +113,6 @@ def getAccessToken(code, client_id, secret):
 
 	return accessToken
 
-
-
-
 def getSubscriptions(accessToken):
 	getSubscriptionsHeaders = {
 		'user-agent': user_agent,
@@ -133,19 +125,16 @@ def getSubscriptions(accessToken):
 
 	subs_parent = subs_data['data']['children']
 
-
 	subNameList = [];
 
 	for s in subs_parent:
 		print s['data']['name']
 		subNameList.append(s['data']['name'])
 
-
 	subscriptionsString = ','.join(subNameList)
 
 	print "Retrieving account subscriptions"
 	return subscriptionsString
-
 
 def setSubscriptions(accessToken, subscriptions):
 	subscribePayload = {
@@ -207,14 +196,14 @@ with open('accounts.json') as accountsFile:
 
 
 #User input
-a = raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
+raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
 print '==== Authorizing First Account ====\n'
-b = raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
+raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
 
 firstAccountAccessToken = authorize(data["fromAccount"]["client_id"], data["fromAccount"]["secret"])
 
 
-c = raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
+raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
 
 print '==== Authorizing Second Account ====\n'
 secondAccountAccessToken = authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
