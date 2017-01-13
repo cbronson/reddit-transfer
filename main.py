@@ -61,7 +61,7 @@ def authorize(client_id, secret):
 	ac = getAuthorizationCode(client_id)
 	at = getAccessToken(ac, client_id, secret)
 
-	print 'Access Token: '
+	print 'Access token: '
 	print at
 
 	return at
@@ -93,7 +93,7 @@ def getAuthorizationCode(client_id):
 
 	code = getCodeFromData(data)
 
-	print 'Code:'
+	print 'Authorization code:'
 	print code
 
 	return code
@@ -129,8 +129,6 @@ def getSubscriptions(accessToken):
 
 	getSubscriptions = requests.get('https://oauth.reddit.com/subreddits/mine/subscriber?limit=100', headers=getSubscriptionsHeaders)
 
-	print getSubscriptions
-
 	subs_data = json.loads(getSubscriptions.text)
 
 	subs_parent = subs_data['data']['children']
@@ -145,6 +143,7 @@ def getSubscriptions(accessToken):
 
 	subscriptionsString = ','.join(subNameList)
 
+	print "Retrieving account subscriptions"
 	return subscriptionsString
 
 
@@ -159,9 +158,8 @@ def setSubscriptions(accessToken, subscriptions):
 		'Authorization': 'Bearer '+accessToken
 	}
 
+	print "Setting subscriptions"
 	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
-
-	print setSubscriptions.text
 
 def setSingleSubscription(accessToken):
 	subscribePayload = {
@@ -176,8 +174,7 @@ def setSingleSubscription(accessToken):
 
 	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
 
-	print 'Set temporary subscription'
-	print setSubscriptions.text
+	print 'Setting temporary subscription'
 
 def clearSubscriptions(accessToken):
 
@@ -200,49 +197,42 @@ def clearSubscriptions(accessToken):
 	}
 
 	setSubscriptions = requests.post('https://oauth.reddit.com/api/subscribe', data=subscribePayload, headers=subscriptionsHeaders)
-	print setSubscriptions
 
-tg = "TESTING"
-def testFunc():
-	return tg
+	print "Clearing default subscriptions"
+
 #MAIN
 #read accounts from accounts.json
 with open('accounts.json') as accountsFile:
 	data = json.load(accountsFile)
 
-print testFunc()
+
+#User input
+a = raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
+print '==== Authorizing First Account ====\n'
+b = raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
+
+firstAccountAccessToken = authorize(data["fromAccount"]["client_id"], data["fromAccount"]["secret"])
 
 
-# #User input
-# a = raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
-# print '==== Authorizing First Account ====\n'
-# b = raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
+c = raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
 
-# firstAccountAccessToken = authorize(data["fromAccount"]["client_id"], data["fromAccount"]["secret"])
+print '==== Authorizing Second Account ====\n'
+secondAccountAccessToken = authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
 
-
-# c = raw_input('\nLog in to the Reddit account you want to import subscriptions to\nPress Enter when ready.')
-
-# print '==== Authorizing Second Account ====\n'
-# secondAccountAccessToken = authorize(data["toAccount"]["client_id"], data["toAccount"]["secret"])
-
-# if(secondAccountAccessToken):
-# 	print 'Received second access token!\n'
-# 	d = raw_input('Accounts ready. Press Enter to begin transfer.\nCAUTION: This will overwrite any subscriptions on the second account')
-# else:
-# 	print 'Error occured retreiving second account token!\n'
+if(secondAccountAccessToken):
+	print 'Received second access token!\n'
+	d = raw_input('Accounts ready. Press Enter to begin transfer.\nCAUTION: This will overwrite any subscriptions on the second account')
+else:
+	print 'Error occured retreiving second account token!\n'
 
 
-# subList = getSubscriptions(firstAccountAccessToken)
-# clearSubscriptions(secondAccountAccessToken)
-# setSubscriptions(secondAccountAccessToken, subList)
+subList = getSubscriptions(firstAccountAccessToken)
+clearSubscriptions(secondAccountAccessToken)
+setSubscriptions(secondAccountAccessToken, subList)
 
-# print '==== Done ===='
+print '==== Done ===='
 
 
-#TODO: prompt user input
-#TODO: allow socket connection reuse
 #TODO: Error handling
-#TODO: Verbose/debug mode
 #TODO: Set proper user agent 
 #TODO: What if the user accidently hits "decline" when authorizing app
