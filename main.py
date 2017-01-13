@@ -196,7 +196,7 @@ with open('accounts.json') as accountsFile:
 
 
 #User input
-raw_input('Follow the setup instructions at _________. \nPress Enter to Begin\n')
+raw_input('\n\n\nFollow the setup instructions at https://github.com/cbronson/reddit-transfer. \nPress Enter to Begin\n')
 print '==== Authorizing First Account ====\n'
 raw_input('Log in to the Reddit account you want to export subscriptions from.\nPress Enter when ready.')
 
